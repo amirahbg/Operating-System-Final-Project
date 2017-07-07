@@ -93,9 +93,8 @@ public class Server {
             clientNo = clientNumber.get();
             client = new ClientResourceManager(clientNo, new ArrayList<>());
             log("New connection with client# " + clientNo + " at " + socket);
-            ClientResourceManager clientResourceManager =
-                    new ClientResourceManager(clientNo, new ArrayList<>());
-            currentClients.add(clientResourceManager);
+            currentClients.add(client);
+            Log.logResourceInfo(clientNumber.get(), currentClients);
         }
 
         /**
