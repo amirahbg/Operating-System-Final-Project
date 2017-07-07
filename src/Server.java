@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Semaphore;
 
 /**
  * A server program which accepts requests from clients to
@@ -23,7 +24,8 @@ import java.net.Socket;
  * interpreter, Ctrl+C generally will shut it down.
  */
 public class Server {
-
+    private Semaphore clientsLock;
+    int clientNumber;
     /**
      * Application method to run the server runs in an infinite loop
      * listening on port 9898.  When a connection is requested, it
@@ -32,16 +34,35 @@ public class Server {
      * client that connects just to show interesting logging
      * messages.  It is certainly not necessary to do this.
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args){
+        Server server = new Server();
+        server.begin();
+
+    }
+
+    public Server() {
+        clientNumber = 0;
+    }
+    private void begin() {
         System.out.println("The capitalization server is running.");
-        int clientNumber = 0;
-        ServerSocket listener = new ServerSocket(9898);
+        ServerSocket listener = null;
+        try {
+            listener = new ServerSocket(9898);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         try {
             while (true) {
                 new Capitalizer(listener.accept(), clientNumber++).start();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
-            listener.close();
+            try {
+                listener.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
