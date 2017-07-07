@@ -26,6 +26,7 @@ import java.util.concurrent.Semaphore;
 public class Server {
     private Semaphore clientsLock;
     int clientNumber;
+
     /**
      * Application method to run the server runs in an infinite loop
      * listening on port 9898.  When a connection is requested, it
@@ -34,7 +35,7 @@ public class Server {
      * client that connects just to show interesting logging
      * messages.  It is certainly not necessary to do this.
      */
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Server server = new Server();
         server.begin();
 
@@ -43,15 +44,12 @@ public class Server {
     public Server() {
         clientNumber = 0;
     }
+
     private void begin() {
-        System.out.println("The capitalization server is running.");
+        System.out.println("The capitalization server is running...");
         ServerSocket listener = null;
         try {
             listener = new ServerSocket(9898);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
             while (true) {
                 new Capitalizer(listener.accept(), clientNumber++).start();
             }
