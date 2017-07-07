@@ -24,9 +24,11 @@ public class Client {
 
     private BufferedReader in;
     private PrintWriter out;
-    private JFrame frame = new JFrame("Capitalize Client");
+    private JFrame frame = new JFrame("Client Side");
     private JTextField dataField = new JTextField(40);
-    private JTextArea messageArea = new JTextArea(8, 60);
+    private JTextArea messageArea = new JTextArea(20, 60);
+    private JTextArea loggerArea = new JTextArea(20, 60);
+
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
@@ -36,8 +38,10 @@ public class Client {
 
         // Layout GUI
         messageArea.setEditable(false);
+        loggerArea.setEditable(false);
         frame.getContentPane().add(dataField, "North");
         frame.getContentPane().add(new JScrollPane(messageArea), "Center");
+        frame.getContentPane().add(new JScrollPane(loggerArea), "East");
 
         // Add Listeners
         dataField.addActionListener(new ActionListener() {
@@ -51,16 +55,6 @@ public class Client {
              */
             public void actionPerformed(ActionEvent e) {
                 out.println(dataField.getText());
-                String response;
-                try {
-                    response = in.readLine();
-                    if (response == null || response.equals("")) {
-                        System.exit(0);
-                    }
-                } catch (IOException ex) {
-                    response = "Error: " + ex;
-                }
-                messageArea.append(response + "\n");
                 dataField.selectAll();
             }
         });
@@ -99,5 +93,38 @@ public class Client {
         client.frame.pack();
         client.frame.setVisible(true);
         client.connectToServer();
+        client.begin();
+    }
+
+    private void begin() {
+        loggerArea.append("Logger: \n");
+        new LogGrabberThread().start();
+    }
+
+    class LogGrabberThread extends Thread {
+        @Override
+        public void run() {
+            while (true) {
+                String response;
+                try {
+                    response = in.readLine();
+                    if (response == null || response.equals("")) {
+                        System.exit(0);
+                    }
+                } catch (IOException ex) {
+                    response = "Error: " + ex;
+                }
+                if (response.contains("Allocated Resources")) {
+                    loggerArea.append(response + "\n");
+                } else {
+                    messageArea.append(response + "\n");
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

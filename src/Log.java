@@ -13,6 +13,6 @@ class Log {
     }
 
     static String logResourceInfoOfAClient(ClientResourceManager client) {
-        return "From Logger: " + client.toString();
+        return "Allocated Resources: " + client.toString();
     }
 }
