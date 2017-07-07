@@ -146,8 +146,8 @@ public class Server {
         int j = input.indexOf('2');
         while (i >= 0 || j >= 0) {
             try {
-                if (i >= 0) resourceLock[i].acquire();
                 if (j >= 0) resourceLock[j].release(ConstantValue.MUTEX_LOCK);
+                if (i >= 0) resourceLock[i].acquire();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
