@@ -63,7 +63,7 @@ public class Server {
                 // TODO: notify client that the server is busy
                 clientNumber.addAndGet(1);
 
-                new Capitalizer(listener.accept()).start();
+                new RequestHandlerThread(listener.accept()).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -83,18 +83,18 @@ public class Server {
      * socket.  The client terminates the dialogue by sending a single line
      * containing only a period.
      */
-    private class Capitalizer extends Thread {
+    private class RequestHandlerThread extends Thread {
         private Socket socket;
         private int clientNo;
         private ClientResourceManager client;
 
-        public Capitalizer(Socket socket) {
+        public RequestHandlerThread(Socket socket) {
             this.socket = socket;
             clientNo = clientNumber.get();
             client = new ClientResourceManager(clientNo, new ArrayList<>());
             log("New connection with client# " + clientNo + " at " + socket);
             currentClients.add(client);
-            Log.logResourceInfo(clientNumber.get(), currentClients);
+            Log.logResourceInfoAllOfActive(clientNumber.get(), currentClients);
         }
 
         /**
@@ -134,6 +134,7 @@ public class Server {
                     clientsLock.release();
                     log("Connection with client# " + clientNo + " closed");
                     deallocateResource(client);
+                    currentClients.remove(client);
                     clientNumber.addAndGet(-1);
                 } catch (IOException e) {
                     log("Couldn't close a socket, what's going on?");
@@ -177,5 +178,6 @@ public class Server {
             System.out.println(message);
         }
     }
+
 
 }

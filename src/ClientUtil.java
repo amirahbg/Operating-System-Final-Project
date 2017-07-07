@@ -76,7 +76,7 @@ public class ClientUtil {
     /**
      * Implements the connection logic by prompting the end user for
      * the server's IP address, connecting, setting up streams, and
-     * consuming the welcome messages from the server.  The Capitalizer
+     * consuming the welcome messages from the server.  The RequestHandlerThread
      * protocol says that the server sends three lines of text to the
      * client immediately after establishing a connection.
      */
