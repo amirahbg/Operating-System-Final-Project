@@ -25,11 +25,16 @@ import java.util.concurrent.Semaphore;
  */
 public class Server {
     private Semaphore clientsLock;
+    private Semaphore[] resourceLock;
     int clientNumber;
 
     public Server() {
         clientNumber = 0;
         clientsLock = new Semaphore(ConstantValue.N_CLIENTS);
+        resourceLock = new Semaphore[ConstantValue.N_RESOURCES];
+        for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
+            resourceLock[i] = new Semaphore(ConstantValue.MUTEX_LOCK);
+        }
     }
 
 
@@ -111,6 +116,7 @@ public class Server {
                     if (input == null || input.equals(".")) {
                         break;
                     }
+                    updateResource(input);
                     out.println(input.toUpperCase());
                 }
             } catch (IOException e) {
@@ -132,6 +138,22 @@ public class Server {
          */
         private void log(String message) {
             System.out.println(message);
+        }
+    }
+
+    private void updateResource(String input) {
+        int i = input.indexOf('1');
+        int j = input.indexOf('2');
+        while (i >= 0 || j >= 0) {
+            try {
+                if (i >= 0) resourceLock[i].acquire();
+                if (j >= 0) resourceLock[j].release(ConstantValue.MUTEX_LOCK);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            j = input.indexOf('2', j + 1);
+            i = input.indexOf('1', i + 1);
         }
     }
 }
