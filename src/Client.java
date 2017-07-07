@@ -70,7 +70,7 @@ public class Client {
     /**
      * Implements the connection logic by prompting the end user for
      * the server's IP address, connecting, setting up streams, and
-     * consuming the welcome messages from the server.  The RequestHandlerThread
+     * consuming the welcome messages from the server.  The RequestThread
      * protocol says that the server sends three lines of text to the
      * client immediately after establishing a connection.
      */

@@ -63,7 +63,7 @@ public class Server {
                 // TODO: notify client that the server is busy
                 clientNumber.addAndGet(1);
 
-                new RequestHandlerThread(listener.accept()).start();
+                new RequestThread(listener.accept()).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -83,12 +83,12 @@ public class Server {
      * socket.  The client terminates the dialogue by sending a single line
      * containing only a period.
      */
-    private class RequestHandlerThread extends Thread {
+    private class RequestThread extends Thread {
         private Socket socket;
         private int clientNo;
         private ClientResourceManager client;
 
-        public RequestHandlerThread(Socket socket) {
+        public RequestThread(Socket socket) {
             this.socket = socket;
             clientNo = clientNumber.get();
             client = new ClientResourceManager(clientNo, new ArrayList<>());
