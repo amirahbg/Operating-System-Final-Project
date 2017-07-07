@@ -1,10 +1,10 @@
 import java.util.List;
 
-public class Log {
+class Log {
     private Log() {
     }
 
-    public static void logResourceInfoAllOfActive(
+    static void logResourceInfoAllOfActive(
             int clientNumber, List<ClientResourceManager> clients) {
         System.out.println(new StringBuilder("Number Of Clients: ")
                 .append(clientNumber));
@@ -12,7 +12,7 @@ public class Log {
                 .append(clients.toString()));
     }
 
-    public static String logResourceInfoOfAClient(ClientResourceManager client) {
-        return client.toString();
+    static String logResourceInfoOfAClient(ClientResourceManager client) {
+        return "From Logger: " + client.toString();
     }
 }
