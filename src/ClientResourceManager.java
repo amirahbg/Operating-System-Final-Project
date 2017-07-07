@@ -13,12 +13,11 @@ public class ClientResourceManager {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (Integer allocatedResource : allocatedResources) {
-            if (1 == allocatedResource) {
-                builder.append(1);
-            } else {
-                builder.append(0);
-            }
+        for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
+            builder.append('0');
+        }
+        for(Integer i: allocatedResources) {
+            builder.replace(i, i + 1, "1");
         }
         return builder.toString();
     }

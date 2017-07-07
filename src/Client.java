@@ -27,7 +27,6 @@ public class Client {
     private JFrame frame = new JFrame("Capitalize Client");
     private JTextField dataField = new JTextField(40);
     private JTextArea messageArea = new JTextArea(8, 60);
-
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
