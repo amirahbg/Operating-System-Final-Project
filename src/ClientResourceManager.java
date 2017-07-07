@@ -28,7 +28,9 @@ public class ClientResourceManager {
     }
 
     public void deallocateResource(int j) {
-        allocatedResources.remove(allocatedResources.indexOf(j));
+        int i = allocatedResources.indexOf(j);
+        if (i >= 0)
+            allocatedResources.remove(i);
     }
 
     public ArrayList<Integer> getAllocatedResources() {

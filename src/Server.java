@@ -1,8 +1,3 @@
-/**
- * Created by amiiir on 7/7/17.
- */
-//public class Server {
-//}
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +5,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A server program which accepts requests from clients to
@@ -24,13 +23,16 @@ import java.util.concurrent.Semaphore;
  * interpreter, Ctrl+C generally will shut it down.
  */
 public class Server {
+    private List<ClientResourceManager> currentClients;
     private Semaphore clientsLock;
     private Semaphore[] resourceLock;
-    int clientNumber;
+    AtomicInteger clientNumber;
 
     public Server() {
-        clientNumber = 0;
+        clientNumber = new AtomicInteger(0);
         clientsLock = new Semaphore(ConstantValue.N_CLIENTS);
+        currentClients = Collections.synchronizedList(new ArrayList<ClientResourceManager>());
+
         resourceLock = new Semaphore[ConstantValue.N_RESOURCES];
         for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
             resourceLock[i] = new Semaphore(ConstantValue.MUTEX_LOCK);
@@ -49,7 +51,6 @@ public class Server {
     public static void main(String[] args) {
         Server server = new Server();
         server.begin();
-
     }
 
     private void begin() {
@@ -60,7 +61,9 @@ public class Server {
             while (true) {
                 clientsLock.acquire();
                 // TODO: notify client that the server is busy
-                new Capitalizer(listener.accept(), clientNumber++).start();
+                clientNumber.addAndGet(1);
+
+                new Capitalizer(listener.accept()).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,12 +85,17 @@ public class Server {
      */
     private class Capitalizer extends Thread {
         private Socket socket;
-        private int clientNumber;
+        private int clientNo;
+        private ClientResourceManager client;
 
-        public Capitalizer(Socket socket, int clientNumber) {
+        public Capitalizer(Socket socket) {
             this.socket = socket;
-            this.clientNumber = clientNumber;
-            log("New connection with client# " + clientNumber + " at " + socket);
+            clientNo = clientNumber.get();
+            client = new ClientResourceManager(clientNo, new ArrayList<>());
+            log("New connection with client# " + clientNo + " at " + socket);
+            ClientResourceManager clientResourceManager =
+                    new ClientResourceManager(clientNo, new ArrayList<>());
+            currentClients.add(clientResourceManager);
         }
 
         /**
@@ -106,7 +114,7 @@ public class Server {
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
                 // Send a welcome message to the client.
-                out.println("Hello, you are client #" + clientNumber + ".");
+                out.println("Hello, you are client #" + clientNo + ".");
                 out.println("Enter a line with only a period to quit\n");
 
                 // Get messages from the client, line by line; return them
@@ -120,15 +128,45 @@ public class Server {
                     out.println(input.toUpperCase());
                 }
             } catch (IOException e) {
-                log("Error handling client# " + clientNumber + ": " + e);
+                log("Error handling client# " + clientNo + ": " + e);
             } finally {
                 try {
                     socket.close();
+                    clientsLock.release();
+                    log("Connection with client# " + clientNo + " closed");
+                    deallocateResource(client);
+                    clientNumber.addAndGet(-1);
                 } catch (IOException e) {
                     log("Couldn't close a socket, what's going on?");
                 }
-                clientsLock.release();
-                log("Connection with client# " + clientNumber + " closed");
+            }
+        }
+
+        private void deallocateResource(ClientResourceManager client) {
+            for (int i: client.getAllocatedResources()) {
+                resourceLock[i].release(1);
+            }
+        }
+
+        private void updateResource(String input) {
+            int i = input.indexOf('1');
+            int j = input.indexOf('2');
+            while (i >= 0 || j >= 0) {
+                try {
+                    if (j >= 0) {
+                        resourceLock[j].release(ConstantValue.MUTEX_LOCK);
+                        client.deallocateResource(j);
+                    }
+                    if (i >= 0) {
+                        resourceLock[i].acquire();
+                        client.addResource(i);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                j = input.indexOf('2', j + 1);
+                i = input.indexOf('1', i + 1);
             }
         }
 
@@ -141,19 +179,4 @@ public class Server {
         }
     }
 
-    private void updateResource(String input) {
-        int i = input.indexOf('1');
-        int j = input.indexOf('2');
-        while (i >= 0 || j >= 0) {
-            try {
-                if (j >= 0) resourceLock[j].release(ConstantValue.MUTEX_LOCK);
-                if (i >= 0) resourceLock[i].acquire();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            j = input.indexOf('2', j + 1);
-            i = input.indexOf('1', i + 1);
-        }
-    }
 }

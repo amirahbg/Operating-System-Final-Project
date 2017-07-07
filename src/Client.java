@@ -1,9 +1,4 @@
-/**
- * Created by amiiir on 7/7/17.
- */
-//public class Client {
-//
-//}
+
 
 
 import java.awt.event.ActionEvent;
@@ -15,7 +10,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
