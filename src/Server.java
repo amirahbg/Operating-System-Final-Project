@@ -27,6 +27,12 @@ public class Server {
     private Semaphore clientsLock;
     int clientNumber;
 
+    public Server() {
+        clientNumber = 0;
+        clientsLock = new Semaphore(ConstantValue.N_CLIENTS);
+    }
+
+
     /**
      * Application method to run the server runs in an infinite loop
      * listening on port 9898.  When a connection is requested, it
@@ -41,19 +47,19 @@ public class Server {
 
     }
 
-    public Server() {
-        clientNumber = 0;
-    }
-
     private void begin() {
         System.out.println("The capitalization server is running...");
         ServerSocket listener = null;
         try {
             listener = new ServerSocket(9898);
             while (true) {
+                clientsLock.acquire();
+                // TODO: notify client that the server is busy
                 new Capitalizer(listener.accept(), clientNumber++).start();
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -69,7 +75,7 @@ public class Server {
      * socket.  The client terminates the dialogue by sending a single line
      * containing only a period.
      */
-    private static class Capitalizer extends Thread {
+    private class Capitalizer extends Thread {
         private Socket socket;
         private int clientNumber;
 
@@ -115,6 +121,7 @@ public class Server {
                 } catch (IOException e) {
                     log("Couldn't close a socket, what's going on?");
                 }
+                clientsLock.release();
                 log("Connection with client# " + clientNumber + " closed");
             }
         }
