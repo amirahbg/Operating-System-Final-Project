@@ -87,8 +87,10 @@ public class Server {
         private Socket socket;
         private int clientNo;
         private ClientResourceManager client;
+        private BufferedReader in;
+        private PrintWriter out;
 
-        public RequestThread(Socket socket) {
+        RequestThread(Socket socket) {
             this.socket = socket;
             clientNo = clientNumber.get();
             client = new ClientResourceManager(clientNo, new ArrayList<>());
@@ -102,19 +104,21 @@ public class Server {
          * client a welcome message then repeatedly reading strings
          * and sending back the capitalized version of the string.
          */
+        @Override
         public void run() {
             try {
 
                 // Decorate the streams so we can send characters
                 // and not just bytes.  Ensure output is flushed
                 // after every newline.
-                BufferedReader in = new BufferedReader(
+                in = new BufferedReader(
                         new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                out = new PrintWriter(socket.getOutputStream(), true);
 
                 // Send a welcome message to the client.
                 out.println("Hello, you are client #" + clientNo + ".");
                 out.println("Enter a line with only a period to quit\n");
+                new LogThread(out, client).start();
 
                 // Get messages from the client, line by line; return them
                 // capitalized
@@ -143,7 +147,7 @@ public class Server {
         }
 
         private void deallocateResource(ClientResourceManager client) {
-            for (int i: client.getAllocatedResources()) {
+            for (int i : client.getAllocatedResources()) {
                 resourceLock[i].release(1);
             }
         }
@@ -179,5 +183,27 @@ public class Server {
         }
     }
 
+    private class LogThread extends Thread {
+        PrintWriter writer;
+        ClientResourceManager client;
 
+        private LogThread(PrintWriter writer, ClientResourceManager client) {
+            this.writer = writer;
+            this.client = client;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    Thread.sleep(ConstantValue.NOTIFY_TIME_ELAPSE);
+                    if (writer != null)
+                        writer.println(Log.logResourceInfoOfAClient(client));
+//                    System.out.println(getName() + ": " + Log.logResourceInfoOfAClient(client));
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
