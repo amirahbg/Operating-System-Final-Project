@@ -1,6 +1,4 @@
 
-import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,6 +29,8 @@ public class Server {
     AtomicInteger clientNumber;
 
     public Server() {
+        ArrayList<Integer> setting = (new SettingFile(ConstantValue.CONF_PATH)).getSetting();
+        ConstantValue.init(setting);
         clientNumber = new AtomicInteger(0);
         clientsLock = new Semaphore(ConstantValue.N_CLIENTS);
         currentClients = Collections.synchronizedList(new ArrayList<ClientResourceManager>());
@@ -39,8 +39,6 @@ public class Server {
         for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
             resourceLock[i] = new Semaphore(ConstantValue.MUTEX_LOCK);
         }
-        ArrayList<Integer> setting = (new SettingFile()).getSetting(ConstantValue.CONF_PATH);
-        ConstantValue.init(setting);
     }
 
 

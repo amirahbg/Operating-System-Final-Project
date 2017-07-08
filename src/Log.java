@@ -15,4 +15,6 @@ class Log {
     static String logResourceInfoOfAClient(ClientResourceManager client) {
         return "Allocated Resources: " + client.toString();
     }
+
+    // TODO: implement logger in a file
 }
