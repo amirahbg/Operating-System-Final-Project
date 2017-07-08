@@ -1,4 +1,6 @@
 
+import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -37,6 +39,8 @@ public class Server {
         for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
             resourceLock[i] = new Semaphore(ConstantValue.MUTEX_LOCK);
         }
+        ArrayList<Integer> setting = (new SettingFile()).getSetting(ConstantValue.CONF_PATH);
+        ConstantValue.init(setting);
     }
 
 
@@ -57,7 +61,7 @@ public class Server {
         System.out.println("The capitalization server is running...");
         ServerSocket listener = null;
         try {
-            listener = new ServerSocket(9898);
+            listener = new ServerSocket(ConstantValue.PORT_NUMBER);
             while (true) {
                 clientsLock.acquire();
                 // TODO: notify client that the server is busy
@@ -65,12 +69,11 @@ public class Server {
 
                 new RequestThread(listener.accept()).start();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         } finally {
             try {
+                assert listener != null;
                 listener.close();
             } catch (IOException e) {
                 e.printStackTrace();
