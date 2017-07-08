@@ -7,9 +7,13 @@ import java.util.ArrayList;
 class SettingFile {
     private BufferedReader reader;
     private PrintWriter writer;
+    private String path;
 
+    SettingFile(String path) {
+        this.path = path;
+    }
 
-    ArrayList<Integer> getSetting(String path) {
+    ArrayList<Integer> getSetting() {
 
         ArrayList<Integer> res = new ArrayList<>();
         try {
@@ -30,7 +34,7 @@ class SettingFile {
         return res;
     }
 
-    boolean setSetting(ArrayList<Integer> setting, String path) {
+    boolean setSetting(ArrayList<Integer> setting) {
         try {
             writer = new PrintWriter(new FileWriter(path, false), true);
             writer.println("N_CLIENTS:" + setting.get(0));
@@ -45,5 +49,11 @@ class SettingFile {
             writer.close();
         }
         return true;
+    }
+
+    boolean setPortNumber(int portNumber) {
+        ArrayList<Integer> setting = getSetting();
+        setting.set(3, portNumber);
+        return setSetting(setting);
     }
 }

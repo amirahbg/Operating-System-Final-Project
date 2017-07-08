@@ -1,12 +1,14 @@
 import java.util.ArrayList;
 
 class ConstantValue {
+    static int N_RESOURCES;
+    static int N_CLIENTS;
+    static int DEADLOCK_MODE;
+    static int PORT_NUMBER;
+
     static final int MUTEX_LOCK = 1;
-    static int N_RESOURCES = 10;
-    static int N_CLIENTS = 3;
     static int NOTIFY_TIME_ELAPSE = 10000;
-    static int DEADLOCK_MODE = 1;
-    static int PORT_NUMBER = 9898;
+    static final String SERVER_ADDRESS = "127.0.0.1";
     static final String CONF_PATH = "./src/conf.txt";
 
     static void init(ArrayList<Integer> setting) {
