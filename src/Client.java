@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 /**
  * A simple Swing-based client for the capitalization server.
@@ -28,6 +26,7 @@ public class Client {
     private JTextField dataField = new JTextField(40);
     private JTextArea messageArea = new JTextArea(20, 60);
     private JTextArea loggerArea = new JTextArea(20, 60);
+    private JButton settingButton = new JButton("Setting");
 
     /**
      * Constructs the client by laying out the GUI and registering a
@@ -35,6 +34,8 @@ public class Client {
      * listener sends the textfield contents to the server.
      */
     public Client() {
+        ArrayList<Integer> setting = (new SettingFile(ConstantValue.CONF_PATH)).getSetting();
+        ConstantValue.init(setting);
 
         // Layout GUI
         messageArea.setEditable(false);
@@ -42,6 +43,8 @@ public class Client {
         frame.getContentPane().add(dataField, "North");
         frame.getContentPane().add(new JScrollPane(messageArea), "Center");
         frame.getContentPane().add(new JScrollPane(loggerArea), "East");
+        frame.getContentPane().add(settingButton, "West");
+
 
         // Add Listeners
         dataField.addActionListener(new ActionListener() {
@@ -58,6 +61,20 @@ public class Client {
                 dataField.selectAll();
             }
         });
+
+        settingButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String portNumber = JOptionPane.showInputDialog(
+                        frame,
+                        "Set port number:",
+                        "Setting ",
+                        JOptionPane.QUESTION_MESSAGE);
+
+                new SettingFile(ConstantValue.CONF_PATH).
+                        setPortNumber(Integer.valueOf(portNumber));
+            }
+        });
     }
 
     /**
@@ -68,12 +85,9 @@ public class Client {
      * client immediately after establishing a connection.
      */
     public void connectToServer() throws IOException {
-
-        // Get the server address from a dialog box.
-        String serverAddress = "127.0.0.1";
-
         // Make connection and initialize streams
-        Socket socket = new Socket(serverAddress, 9898);
+
+        Socket socket = new Socket(ConstantValue.SERVER_ADDRESS, ConstantValue.PORT_NUMBER);
         in = new BufferedReader(
                 new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
