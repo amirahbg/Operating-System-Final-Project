@@ -4,10 +4,12 @@ import java.util.ArrayList;
 public class ClientResourceManager {
     private int clientNumber;
     private ArrayList<Integer> allocatedResources;
+    private ArrayList<Integer> waitList;
 
-    ClientResourceManager(int clientNumber, ArrayList<Integer> allocatedResources) {
+    ClientResourceManager(int clientNumber) {
         this.clientNumber = clientNumber;
-        this.allocatedResources = allocatedResources;
+        this.allocatedResources = new ArrayList<>();
+        this.waitList = new ArrayList<>();
     }
 
     @Override
@@ -16,7 +18,7 @@ public class ClientResourceManager {
         for (int i = 0; i < ConstantValue.N_RESOURCES; i++) {
             builder.append('0');
         }
-        for(Integer i: allocatedResources) {
+        for (Integer i : allocatedResources) {
             builder.replace(i, i + 1, "1");
         }
         return builder.toString();
@@ -38,5 +40,17 @@ public class ClientResourceManager {
 
     public ArrayList<Integer> getAllocatedResources() {
         return allocatedResources;
+    }
+
+    public ArrayList<Integer> getWaitList() {
+        return waitList;
+    }
+
+    public void addToWaitList(int resNo) {
+        waitList.add(resNo);
+    }
+
+    public void removeFromWaitList(int resNo) {
+        waitList.remove(Integer.valueOf(resNo));
     }
 }
