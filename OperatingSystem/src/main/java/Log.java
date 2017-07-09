@@ -1,3 +1,5 @@
+import ch.petikoch.libs.jtwfg.DeadlockAnalysisResult;
+
 import java.util.List;
 
 class Log {
@@ -16,5 +18,8 @@ class Log {
         return "Allocated Resources: " + client.toString();
     }
 
-    // TODO: implement logger in a file
+    static String deadlockReport(DeadlockAnalysisResult deadlockReport) {
+        return "Encountered with Deadlock: " +
+                deadlockReport.getDeadlockCycles();
+    }
 }
