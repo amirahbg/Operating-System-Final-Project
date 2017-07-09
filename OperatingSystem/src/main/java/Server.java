@@ -1,15 +1,11 @@
 
 import ch.petikoch.libs.jtwfg.DeadlockAnalysisResult;
+import ch.petikoch.libs.jtwfg.DeadlockCycle;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,14 +23,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server {
     private List<ClientResourceManager> currentClients;
     private Semaphore clientsLock;
+    private Semaphore mutexLock;
     private Semaphore[] resourceLock;
     AtomicInteger clientNumber;
+    private DeadlockHandler deadlockHandler;
 
     public Server() {
         ArrayList<Integer> setting = (new SettingFile(ConstantValue.CONF_PATH)).getSetting();
         ConstantValue.init(setting);
         clientNumber = new AtomicInteger(0);
         clientsLock = new Semaphore(ConstantValue.N_CLIENTS);
+        mutexLock = new Semaphore(ConstantValue.MUTEX_LOCK);
         currentClients = Collections.synchronizedList(new ArrayList<ClientResourceManager>());
 
         resourceLock = new Semaphore[ConstantValue.N_RESOURCES];
@@ -62,12 +61,17 @@ public class Server {
         ServerSocket listener = null;
         try {
             listener = new ServerSocket(ConstantValue.PORT_NUMBER);
+
             while (true) {
                 clientsLock.acquire();
                 // TODO: notify client that the server is busy
                 clientNumber.addAndGet(1);
 
                 new RequestThread(listener.accept()).start();
+                if (ConstantValue.DEADLOCK_MODE == 2) {
+                    deadlockHandler = new DeadlockHandler(currentClients);
+                    deadlockHandler.start();
+                }
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -100,6 +104,7 @@ public class Server {
             log("New connection with client# " + clientNo + " at " + socket);
             currentClients.add(client);
             Log.logResourceInfoAllOfActive(clientNumber.get(), currentClients);
+
         }
 
         /**
@@ -122,7 +127,10 @@ public class Server {
                 out.println("Hello, you are client #" + clientNo + ".");
                 out.println("Enter a line with only a period to quit\n");
                 new LogThread(out, client).start();
-
+                if (ConstantValue.DEADLOCK_MODE == 2) {
+                    deadlockHandler.addWriter(out, clientNo);
+                    deadlockHandler.addSocket(socket, clientNo);
+                }
                 // Get messages from the client, line by line; return them
                 // capitalized
                 while (true) {
@@ -155,7 +163,7 @@ public class Server {
         }
 
         private void updateResource(String input) {
-            DeadlockHandler deadlockDetector = new DeadlockHandler(2);
+            DeadlockChecker deadlockDetector = new DeadlockChecker();
 //            deadlockDetector.getSystemStatus((List<ClientResourceManager>) currentClients);
 
             int i = input.indexOf('1');
@@ -178,12 +186,7 @@ public class Server {
                                             ConstantValue.DEADLOCK_MODE));
                                 }
                             } else if (ConstantValue.DEADLOCK_MODE == 2) {
-                                res = deadlockDetector.getSystemStatus(currentClients);
-                                if (res.hasDeadlock()) {
-                                    out.println(Log.deadlockReport(res,
-                                            ConstantValue.DEADLOCK_MODE));
-
-                                }
+                                // deadlock handler will take care of this
                             } else if (ConstantValue.DEADLOCK_MODE == 3) {
                                 res = deadlockDetector.getSystemStatus(currentClients);
                                 if (res.hasDeadlock()) {
@@ -256,6 +259,79 @@ public class Server {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * this class make a new thread to check if deadlock happened. this class will instantiate
+     * when DEADLOCK_MODE == 2
+     */
+    private class DeadlockHandler extends Thread {
+        List<ClientResourceManager> currentClients;
+        HashMap<Integer, PrintWriter> writers;
+        HashMap<Integer, Socket> sockets;
+
+        private DeadlockHandler(List<ClientResourceManager> currentClients) {
+            this.currentClients = currentClients;
+            this.writers = new HashMap<>();
+            this.sockets = new HashMap<>();
+        }
+
+        private void addWriter(PrintWriter writer, Integer clientNo) {
+            writers.put(clientNo, writer);
+        }
+
+        private void addSocket(Socket socket, Integer clientNo) {
+            sockets.put(clientNo, socket);
+        }
+
+        @Override
+        public void run() {
+            DeadlockAnalysisResult res;
+            DeadlockChecker deadlockChecker = new DeadlockChecker();
+            res = deadlockChecker.getSystemStatus(currentClients);
+
+            while (true) {
+                if (writers.isEmpty() || currentClients.isEmpty())
+                    continue;
+                res = deadlockChecker.getSystemStatus(currentClients);
+                if (res.hasDeadlock()) {
+                    Set<DeadlockCycle> cycles = res.getDeadlockCycles();
+                    try {
+                        mutexLock.acquire();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    for (DeadlockCycle cycle : cycles) {
+                        for (ClientResourceManager client : currentClients) {
+                            if (cycle.isDeadlocked("P" + client.getClientNumber())) {
+                                Socket socket = sockets.get(client.getClientNumber());
+                                PrintWriter writer = writers.get(client.getClientNumber());
+                                try {
+                                    writer.println("Your Connection with server has been closed because of a Deadlock");
+                                    clientsLock.release();
+                                    for (int i : client.getAllocatedResources()) {
+                                        resourceLock[i].release(1);
+                                    }
+                                    currentClients.remove(client);
+                                    clientNumber.addAndGet(-1);
+                                    socket.close();
+                                    System.out.println("Connection with client# " + client.getClientNumber() + " closed");
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                    mutexLock.release();
+                }
+                try {
+                    Thread.sleep(ConstantValue.DEADLOCK_HANDLER_SLEEP);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
