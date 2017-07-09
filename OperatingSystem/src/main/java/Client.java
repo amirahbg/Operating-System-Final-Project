@@ -130,7 +130,8 @@ public class Client {
                 } catch (IOException ex) {
                     response = "Error: " + ex;
                 }
-                if (response.contains("Allocated Resources")) {
+                if (response.contains("Allocated Resources") ||
+                        response.contains("Encountered with Deadlock")) {
                     loggerArea.append(response + "\n");
                 } else {
                     messageArea.append(response + "\n");
