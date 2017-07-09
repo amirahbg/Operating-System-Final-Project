@@ -5,7 +5,6 @@ import ch.petikoch.libs.jtwfg.Graph;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 /**
  * Created by amiiir on 7/9/17.
@@ -17,35 +16,28 @@ public class DeadlockHandler {
         this.deadlockMode = deadlockMode;
     }
 
-    /**
-     * @return true denotes that the system is in the safe state
-     * and false denotes that the system is in the unsafe state
-     * @param currentClients
-     */
-    boolean getSystemStatus(List<ClientResourceManager> currentClients) {
+
+    DeadlockAnalysisResult getSystemStatus(List<ClientResourceManager> currentClients) {
         GraphBuilder builder = new GraphBuilder();
         for (ClientResourceManager client : currentClients) {
             ArrayList<Integer> clientResources = client.getAllocatedResources();
             for (Integer i : clientResources) {
                 builder.addResource2TaskAssignment(
-                        "r" + i.toString(),
-                        "c" + String.valueOf(client.getClientNumber()));
+                        "R" + i.toString(),
+                        "P" + String.valueOf(client.getClientNumber()));
             }
-            ArrayList<Integer> waitList = client.getWaitForResources();
+            ArrayList<Integer> waitList = client.getWaitList();
             for (Integer i : waitList) {
                 builder.addTask2ResourceDependency(
-                        "c" + String.valueOf(client.getClientNumber()),
-                        "r" + i.toString());
+                        "P" + String.valueOf(client.getClientNumber()),
+                        "R" + i.toString());
             }
         }
         Graph graph = builder.build();
 
         DeadlockDetector deadlockDetector = new DeadlockDetector();
         DeadlockAnalysisResult analyzisResult = deadlockDetector.analyze(graph);
-        if (analyzisResult.hasDeadlock()) {
-            System.out.println(analyzisResult);
-        }
 
-        return analyzisResult.hasDeadlock();
+        return analyzisResult;
     }
 }
