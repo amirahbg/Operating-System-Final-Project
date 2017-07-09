@@ -9,7 +9,7 @@ class ConstantValue {
     static final int MUTEX_LOCK = 1;
     static int NOTIFY_TIME_ELAPSE = 10000;
     static final String SERVER_ADDRESS = "127.0.0.1";
-    static final String CONF_PATH = "./src/conf.txt";
+    static final String CONF_PATH = "./OperatingSystem/src/main/java/conf.txt";
 
     static void init(ArrayList<Integer> setting) {
         N_CLIENTS = setting.get(0);
