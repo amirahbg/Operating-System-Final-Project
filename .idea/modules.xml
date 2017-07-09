@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/OperatingSystemFinalProject.iml" filepath="$PROJECT_DIR$/OperatingSystemFinalProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/OperatingSystem.iml" filepath="$PROJECT_DIR$/.idea/modules/OperatingSystem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/OperatingSystemFinalProject.iml" filepath="$PROJECT_DIR$/.idea/modules/OperatingSystemFinalProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/OperatingSystem_main.iml" filepath="$PROJECT_DIR$/.idea/modules/OperatingSystem_main.iml" group="OperatingSystem" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/OperatingSystem_test.iml" filepath="$PROJECT_DIR$/.idea/modules/OperatingSystem_test.iml" group="OperatingSystem" />
     </modules>
   </component>
 </project>
