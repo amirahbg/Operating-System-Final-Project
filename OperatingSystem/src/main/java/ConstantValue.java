@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 class ConstantValue {
+    public static final int DEADLOCK_HANDLER_SLEEP = 1000;
     static int N_RESOURCES;
     static int N_CLIENTS;
     static int DEADLOCK_MODE;

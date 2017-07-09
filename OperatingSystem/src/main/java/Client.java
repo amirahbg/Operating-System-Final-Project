@@ -30,6 +30,7 @@ public class Client {
     private JTextArea loggerArea = new JTextArea(20, 60);
     private JButton settingButton = new JButton("Setting");
 
+    private Socket socket;
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
@@ -89,7 +90,7 @@ public class Client {
     public void connectToServer() throws IOException {
         // Make connection and initialize streams
 
-        Socket socket = new Socket(ConstantValue.SERVER_ADDRESS, ConstantValue.PORT_NUMBER);
+        socket = new Socket(ConstantValue.SERVER_ADDRESS, ConstantValue.PORT_NUMBER);
         in = new BufferedReader(
                 new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
@@ -130,11 +131,18 @@ public class Client {
                 } catch (IOException ex) {
                     response = "Error: " + ex;
                 }
-                if (response.contains("Allocated Resources") ||
-                        response.contains("Encountered with Deadlock")) {
-                    loggerArea.append(response + "\n");
-                } else {
+                if (response.contains("Accepted Request") ||
+                        response.contains("Denied Request") ||
+                        response.contains("Wait For Resource")) {
                     messageArea.append(response + "\n");
+                } else if (response.contains("Your Connection with server has been closed")) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    loggerArea.append(response + "\n");
                 }
                 try {
                     Thread.sleep(100);

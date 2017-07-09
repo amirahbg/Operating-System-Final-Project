@@ -9,10 +9,10 @@ import java.util.List;
 /**
  * Created by amiiir on 7/9/17.
  */
-public class DeadlockHandler {
+public class DeadlockChecker {
     int deadlockMode;
 
-    DeadlockHandler(int deadlockMode) {
+    DeadlockChecker() {
         this.deadlockMode = deadlockMode;
     }
 
