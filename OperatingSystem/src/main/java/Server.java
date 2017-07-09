@@ -200,7 +200,7 @@ public class Server {
                             resourceLock[i].acquire();
                             client.removeFromWaitList(i);
                             client.addResource(i);
-                            out.println("Accepted Request: " + input);
+                            out.println("Accepted Request for resource: R" + String.valueOf(i));
                             // TODO: assure that the input has ConstantValue.N_RESOURCES digit
                         } else {
                             if (!res.hasDeadlock()) {
@@ -208,16 +208,16 @@ public class Server {
                                 resourceLock[i].acquire();
                                 client.removeFromWaitList(i);
                                 client.addResource(i);
-                                out.println("Accepted Request: " + input);
+                                out.println("Accepted Request for resource: R" + String.valueOf(i));
                             }
                             if (res.hasDeadlock() && ConstantValue.DEADLOCK_MODE != 1) {
                                 resourceLock[i].acquire();
                                 client.removeFromWaitList(i);
                                 client.addResource(i);
-                                out.println("Accepted Request: " + input);
+                                out.println("Accepted Request for resource: R" + String.valueOf(i));
                             }
                             if (res.hasDeadlock() && ConstantValue.DEADLOCK_MODE == 1) {
-                                out.println("Denied Request: " + input);
+                                out.println("Denied Request for resource: R" + String.valueOf(i));
                             }
                         }
                     }
