@@ -1,4 +1,6 @@
 
+import ch.petikoch.libs.jtwfg.DeadlockAnalysisResult;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -94,7 +96,7 @@ public class Server {
         RequestThread(Socket socket) {
             this.socket = socket;
             clientNo = clientNumber.get();
-            client = new ClientResourceManager(clientNo, new ArrayList<>());
+            client = new ClientResourceManager(clientNo);
             log("New connection with client# " + clientNo + " at " + socket);
             currentClients.add(client);
             Log.logResourceInfoAllOfActive(clientNumber.get(), currentClients);
@@ -154,6 +156,9 @@ public class Server {
         }
 
         private void updateResource(String input) {
+            DeadlockHandler deadlockDetector = new DeadlockHandler(2);
+//            deadlockDetector.getSystemStatus((List<ClientResourceManager>) currentClients);
+
             int i = input.indexOf('1');
             int j = input.indexOf('2');
             while (i >= 0 || j >= 0) {
@@ -163,7 +168,17 @@ public class Server {
                         client.deallocateResource(j);
                     }
                     if (i >= 0) {
+                        if (resourceLock[i].availablePermits() == 0) {
+                            client.addToWaitList(i);
+                            if (ConstantValue.DEADLOCK_MODE == 3) {
+                                DeadlockAnalysisResult res = deadlockDetector.getSystemStatus(currentClients);
+                                if (res.hasDeadlock()) {
+                                    out.println(Log.deadlockReport(res));
+                                }
+                            }
+                        }
                         resourceLock[i].acquire();
+                        client.removeFromWaitList(i);
                         client.addResource(i);
                     }
                 } catch (InterruptedException e) {
