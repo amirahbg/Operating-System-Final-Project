@@ -131,7 +131,6 @@ public class Server {
                         break;
                     }
                     updateResource(input);
-                    out.println(input.toUpperCase());
                 }
             } catch (IOException e) {
                 log("Error handling client# " + clientNo + ": " + e);
@@ -168,18 +167,56 @@ public class Server {
                         client.deallocateResource(j);
                     }
                     if (i >= 0) {
+                        DeadlockAnalysisResult res = null;
                         if (resourceLock[i].availablePermits() == 0) {
                             client.addToWaitList(i);
-                            if (ConstantValue.DEADLOCK_MODE == 3) {
-                                DeadlockAnalysisResult res = deadlockDetector.getSystemStatus(currentClients);
+                            if (ConstantValue.DEADLOCK_MODE == 1) {
+                                res = deadlockDetector.getSystemStatusWithRequest(currentClients
+                                        , i, clientNo);
                                 if (res.hasDeadlock()) {
-                                    out.println(Log.deadlockReport(res));
+                                    out.println(Log.deadlockReport(res,
+                                            ConstantValue.DEADLOCK_MODE));
+                                }
+                            } else if (ConstantValue.DEADLOCK_MODE == 2) {
+                                res = deadlockDetector.getSystemStatus(currentClients);
+                                if (res.hasDeadlock()) {
+                                    out.println(Log.deadlockReport(res,
+                                            ConstantValue.DEADLOCK_MODE));
+
+                                }
+                            } else if (ConstantValue.DEADLOCK_MODE == 3) {
+                                res = deadlockDetector.getSystemStatus(currentClients);
+                                if (res.hasDeadlock()) {
+                                    out.println(Log.deadlockReport(res,
+                                            ConstantValue.DEADLOCK_MODE));
+
                                 }
                             }
                         }
-                        resourceLock[i].acquire();
-                        client.removeFromWaitList(i);
-                        client.addResource(i);
+                        if (res == null) {
+                            resourceLock[i].acquire();
+                            client.removeFromWaitList(i);
+                            client.addResource(i);
+                            out.println("Accepted Request: " + input);
+                            // TODO: assure that the input has ConstantValue.N_RESOURCES digit
+                        } else {
+                            if (!res.hasDeadlock()) {
+                                out.println("Wait For Resource: R" + String.valueOf(i));
+                                resourceLock[i].acquire();
+                                client.removeFromWaitList(i);
+                                client.addResource(i);
+                                out.println("Accepted Request: " + input);
+                            }
+                            if (res.hasDeadlock() && ConstantValue.DEADLOCK_MODE != 1) {
+                                resourceLock[i].acquire();
+                                client.removeFromWaitList(i);
+                                client.addResource(i);
+                                out.println("Accepted Request: " + input);
+                            }
+                            if (res.hasDeadlock() && ConstantValue.DEADLOCK_MODE == 1) {
+                                out.println("Denied Request: " + input);
+                            }
+                        }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

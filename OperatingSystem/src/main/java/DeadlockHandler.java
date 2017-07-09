@@ -40,4 +40,31 @@ public class DeadlockHandler {
 
         return analyzisResult;
     }
+
+    DeadlockAnalysisResult getSystemStatusWithRequest(List<ClientResourceManager> currentClients
+            , int resNo, int clientNo) {
+
+        GraphBuilder builder = new GraphBuilder();
+        for (ClientResourceManager client : currentClients) {
+            ArrayList<Integer> clientResources = client.getAllocatedResources();
+            for (Integer i : clientResources) {
+                builder.addResource2TaskAssignment(
+                        "R" + i.toString(),
+                        "P" + String.valueOf(client.getClientNumber()));
+            }
+            ArrayList<Integer> waitList = client.getWaitList();
+            for (Integer i : waitList) {
+                builder.addTask2ResourceDependency(
+                        "P" + String.valueOf(client.getClientNumber()),
+                        "R" + i.toString());
+            }
+            builder.addTask2ResourceDependency(
+                    "P" + String.valueOf(clientNo),
+                    "R" + resNo);
+        }
+        Graph graph = builder.build();
+
+        DeadlockDetector deadlockDetector = new DeadlockDetector();
+        return deadlockDetector.analyze(graph);
+    }
 }
